@@ -36,7 +36,7 @@ fn main() -> std::io::Result<()> {
         line = re.replace_all(&line, "").to_string();
         let re_2 = Regex::new(" +").unwrap();
         let instruction: Vec<&str> = re_2.split(&line).collect();
-        let mut op;
+        let op;
         let mut f2;
         let mut f3;
         let mut f4;
