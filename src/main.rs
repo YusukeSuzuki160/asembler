@@ -9,7 +9,7 @@ fn main() -> std::io::Result<()> {
     let filename = args[1].clone();
     let file = File::open(filename.clone())?;
     let contents = BufReader::new(file);
-    let re = Regex::new("^+").unwrap();
+    let re = Regex::new("^+ ").unwrap();
     let mut i = 0;
     for line in contents.lines() {
         let mut line = line.unwrap();
@@ -21,8 +21,8 @@ fn main() -> std::io::Result<()> {
         let instruction: Vec<&str> = re_2.split(&line).collect();
         if instruction[1] == ":" {
             labels.insert(instruction[0].to_string(), i);
-            i += 1;
         }
+        i += 1;
     }
     let file_2 = File::open(filename.clone())?;
     let contents_2 = BufReader::new(file_2);
@@ -37,21 +37,31 @@ fn main() -> std::io::Result<()> {
         let re_2 = Regex::new(" +").unwrap();
         let instruction: Vec<&str> = re_2.split(&line).collect();
         let op;
-        let mut f2;
-        let mut f3;
-        let mut f4;
+        let mut f2 = String::new();
+        let mut f3 = String::new();
+        let mut f4 = String::new();
         //let mut f5;
         if instruction[1] == ":" {
             op = instruction[2].clone().to_string();
             f2 = instruction[3].clone().to_string();
-            f3 = instruction[4].clone().to_string();
-            f4 = instruction[5].clone().to_string();
+            if instruction.len() > 4 {
+                f3 = instruction[4].clone().to_string();
+            }
+            if instruction.len() > 5 {
+                f4 = instruction[5].clone().to_string();
+            }
             //f5 = instruction[6].clone().to_string();
         } else {
             op = instruction[0].clone().to_string();
-            f2 = instruction[1].clone().to_string();
-            f3 = instruction[2].clone().to_string();
-            f4 = instruction[3].clone().to_string();
+            if instruction.len() > 1 {
+                f2 = instruction[1].clone().to_string();
+            }
+            if instruction.len() > 2 {
+                f3 = instruction[2].clone().to_string();
+            }
+            if instruction.len() > 3 {
+                f4 = instruction[3].clone().to_string();
+            }
             //f5 = instruction[4].clone().to_string();
         }
         if op == "add" {
@@ -72,7 +82,7 @@ fn main() -> std::io::Result<()> {
         } else if op == "lui" {
             p_b(6, 3);
             p_r2i(&mut f2, &mut "r0".to_string());
-            p_b(11, 2);
+            p_b(16, f3.parse::<isize>().unwrap());
             print!("\n");
         } else if op == "and" {
             p_b(6, 0);
@@ -112,80 +122,80 @@ fn main() -> std::io::Result<()> {
         } else if op == "sll" {
             p_b(6, 0);
             p_r3(&mut f2, &mut f3, &mut "r0".to_string());
-            p_b(5,f4.parse::<isize>().unwrap());
+            p_b(5, f4.parse::<isize>().unwrap());
             p_b(6, 16);
             print!("\n");
         } else if op == "srl" {
             p_b(6, 0);
             p_r3(&mut f2, &mut f3, &mut "r0".to_string());
-            p_b(5,f4.parse::<isize>().unwrap());
+            p_b(5, f4.parse::<isize>().unwrap());
             p_b(6, 17);
             print!("\n");
         } else if op == "sra" {
             p_b(6, 0);
             p_r3(&mut f2, &mut f3, &mut "r0".to_string());
-            p_b(5,f4.parse::<isize>().unwrap());
+            p_b(5, f4.parse::<isize>().unwrap());
             p_b(6, 18);
             print!("\n");
         } else if op == "lw" {
             p_b(6, 16);
             p_r2i(&mut f2, &mut base(&mut f3));
-            p_b(16, dpl(&mut f3).parse::<isize>().unwrap());
+            p_b(16, dpl(&mut f4).parse::<isize>().unwrap());
             print!("\n");
         } else if op == "lh" {
             p_b(6, 18);
             p_r2i(&mut f2, &mut base(&mut f3));
-            p_b(16, dpl(&mut f3).parse::<isize>().unwrap());
+            p_b(16, dpl(&mut f4).parse::<isize>().unwrap());
             print!("\n");
         } else if op == "lb" {
             p_b(6, 20);
             p_r2i(&mut f2, &mut base(&mut f3));
-            p_b(16, dpl(&mut f3).parse::<isize>().unwrap());
+            p_b(16, dpl(&mut f4).parse::<isize>().unwrap());
             print!("\n");
         } else if op == "sw" {
             p_b(6, 24);
             p_r2i(&mut f2, &mut base(&mut f3));
-            p_b(16, dpl(&mut f3).parse::<isize>().unwrap());
+            p_b(16, dpl(&mut f4).parse::<isize>().unwrap());
             print!("\n");
         } else if op == "sh" {
             p_b(6, 26);
             p_r2i(&mut f2, &mut base(&mut f3));
-            p_b(16, dpl(&mut f3).parse::<isize>().unwrap());
+            p_b(16, dpl(&mut f4).parse::<isize>().unwrap());
             print!("\n");
-        } else if op == "sb"{
+        } else if op == "sb" {
             p_b(6, 28);
             p_r2i(&mut f2, &mut base(&mut f3));
-            p_b(16, dpl(&mut f3).parse::<isize>().unwrap());
+            p_b(16, dpl(&mut f4).parse::<isize>().unwrap());
             print!("\n");
         } else if op == "beq" {
             p_b(6, 32);
             p_r2b(&mut f2, &mut f3);
-            p_b(16, labels[&f4] - i - 1);
+            p_b(16, *labels.get(&f4).unwrap() - i - 1);
             print!("\n");
         } else if op == "bne" {
             p_b(6, 33);
             p_r2b(&mut f2, &mut f3);
-            p_b(16, labels[&f4] - i - 1);
+            p_b(16, *labels.get(&f4).unwrap() - i - 1);
             print!("\n");
         } else if op == "blt" {
             p_b(6, 34);
             p_r2b(&mut f2, &mut f3);
-            p_b(16, labels[&f4] - i - 1);
+            p_b(16, *labels.get(&f4).unwrap() - i - 1);
             print!("\n");
         } else if op == "ble" {
             p_b(6, 35);
             p_r2b(&mut f2, &mut f3);
-            p_b(16, labels[&f4] - i - 1);
+            p_b(16, *labels.get(&f4).unwrap() - i - 1);
             print!("\n");
         } else if op == "j" {
             p_b(6, 40);
-            p_b(26, labels[&f2]);
+            p_b(26, *labels.get(&f2).unwrap());
             print!("\n");
-        } else if op == "jal"{
+        } else if op == "jal" {
             p_b(6, 41);
-            p_b(26, labels[&f2]);
+            p_b(26, *labels.get(&f2).unwrap());
             print!("\n");
-        } else if op == "jr"{
+        } else if op == "jr" {
             p_b(6, 42);
             p_r3(&mut "r0".to_string(), &mut f2, &mut "r0".to_string());
             p_b(11, 0);
@@ -202,10 +212,13 @@ fn p_b(digits: usize, num: isize) {
     if num >= 0 {
         print!("{:>0digits$b}", num);
     } else {
-        print!("{}", &num.to_string().as_str()[..(64 - digits)]);
+        let mut out = format!("{:b}", num);
+        let length = out.len() - digits;
+        let p = &out[length..];
+        print!("{}", p)
     }
 }
-fn p_r3(rd: &mut String, rs: &mut String,rt: &mut String) {
+fn p_r3(rd: &mut String, rs: &mut String, rt: &mut String) {
     *rs = rs.replace("r", "");
     p_b(5, rs.parse::<isize>().unwrap());
     *rt = rt.replace("r", "");
@@ -221,18 +234,18 @@ fn p_r2i(rt: &mut String, rs: &mut String) {
 }
 fn p_r2b(rs: &mut String, rt: &mut String) {
     *rs = rs.replace("r", "");
-    p_b(5, rt.parse::<isize>().unwrap());
+    p_b(5, rs.parse::<isize>().unwrap());
     *rt = rt.replace("r", "");
     p_b(5, rt.parse::<isize>().unwrap());
 }
-fn base(addr: &mut String) -> String{
-    let re = Regex::new(".*(").unwrap();
+fn base(addr: &mut String) -> String {
+    let re = Regex::new(r".*\(").unwrap();
     re.replace(addr, "").to_string();
     *addr = addr.replace(")", "").to_string();
     addr.clone()
 }
 fn dpl(addr: &mut String) -> String {
-    let re= Regex::new("(.*)").unwrap();
+    let re = Regex::new(r"\(.*\)").unwrap();
     re.replace(addr, "").to_string();
     addr.clone()
 }
